@@ -1,0 +1,111 @@
+package com.paytm.crypto;
+
+import java.io.PrintStream;
+
+public class SecurityException extends Exception {
+
+	private static final long serialVersionUID = -3956900350777254445L;
+	private String errorCode;
+	private String errorMessage;
+	private Exception exception;
+
+	/**
+	 * Instantiates a new security exception.
+	 * 
+	 * @param errorCode
+	 *            the error code
+	 * @param errorMessage
+	 *            the error message
+	 */
+	public SecurityException(String errorCode, String errorMessage) {
+		super(errorMessage);
+		this.errorCode = errorCode;
+		this.errorMessage = errorMessage;
+
+	}
+
+	/**
+	 * Instantiates a new security exception.
+	 * 
+	 * @param errorMessage
+	 *            the error message
+	 */
+	public SecurityException(String errorMessage) {
+		super(errorMessage);
+	}
+
+	/**
+	 * Instantiates a new security exception.
+	 * 
+	 * @param cause
+	 *            the cause
+	 */
+	public SecurityException(Throwable cause) {
+		super(cause);
+	}
+
+	/**
+	 * Instantiates a new security exception.
+	 * 
+	 * @param errorMessage
+	 *            the error message
+	 * @param cause
+	 *            the cause
+	 */
+	public SecurityException(String errorMessage, Throwable cause) {
+		super(errorMessage, cause);
+	}
+
+	/**
+	 * Instantiates a new security exception.
+	 * 
+	 * @param errorMessage
+	 *            the error message
+	 * @param exception
+	 *            the exception
+	 */
+	public SecurityException(String errorMessage, Exception exception) {
+		this.errorMessage = errorMessage;
+		this.exception = exception;
+	}
+
+	/**
+	 * @return the errorCode
+	 */
+	public String getErrorCode() {
+		return errorCode;
+	}
+
+	/**
+	 * @param errorCode
+	 *            the errorCode to set
+	 */
+	public void setErrorCode(String errorCode) {
+		this.errorCode = errorCode;
+	}
+
+	/**
+	 * @return the errorMessage
+	 */
+	public String getErrorMessage() {
+		return errorMessage;
+	}
+
+	/**
+	 * @param errorMessage
+	 *            the errorMessage to set
+	 */
+	public void setErrorMessage(String errorMessage) {
+		this.errorMessage = errorMessage;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Throwable#printStackTrace(java.io.PrintStream)
+	 */
+	public void printStackTrace(PrintStream stream) {
+		if (exception != null)
+			exception.printStackTrace(stream);
+	}
+}

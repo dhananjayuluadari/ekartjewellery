@@ -1,0 +1,171 @@
+
+package com.paytm.merchant;
+
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import com.paytm.crypto.CryptoUtils;
+import com.paytm.crypto.Encryption;
+import com.paytm.crypto.EncryptionFactory;
+
+
+/**
+ * This Class CheckSumServiceHelper implements the SingleTon Pattern.It will
+ * validate the CheckSum.
+ */
+public class CheckSumServiceHelper {
+
+	private static CheckSumServiceHelper checkSumServiceHelper;
+
+	/**
+	 * Instantiates a new check sum service helper.
+	 */
+	private CheckSumServiceHelper() {
+	}
+
+	public static String getVersion()
+	{
+		return "1.0";
+	}
+	/**
+	 * @return the checkSumServiceHelper
+	 */
+	public static CheckSumServiceHelper getCheckSumServiceHelper() {
+		if (null == checkSumServiceHelper) {
+			checkSumServiceHelper = new CheckSumServiceHelper();
+		}
+		return checkSumServiceHelper;
+	}
+
+	public String genrateCheckSum(String Key, TreeMap<String, String> paramap) throws Exception {
+
+		StringBuilder response = checkSumServiceHelper.getCheckSumString(paramap);
+		String checkSumValue = null;
+		try {
+		Encryption encryption = EncryptionFactory.getEncryptionInstance("AES");
+		
+		String randomNo = CryptoUtils.generateRandomString(4);	
+		response.append(randomNo);
+
+		String checkSumHash = CryptoUtils.getSHA256(response.toString());
+		checkSumHash = checkSumHash.concat(randomNo);
+       
+		System.out.println("-----------------------------");
+		System.out.println(checkSumHash);
+		System.out.println("-----------------------------");
+		checkSumValue = encryption.encrypt(checkSumHash,Key);
+		
+		if(checkSumValue !=null)
+		{
+			checkSumValue = checkSumValue.replaceAll("\r\n","");
+			checkSumValue = checkSumValue.replaceAll("\r","");
+			checkSumValue = checkSumValue.replaceAll("\n","");
+		}
+	
+	} catch (SecurityException e) {
+		e.printStackTrace();
+	}
+
+		return checkSumValue;
+	}
+	/**
+	 * @param masterKey
+	 * @param paramMap
+	 * @return checkSumString
+	 * @throws Exception
+	 * This method is used to generated checksum string for merchant 
+	 */
+	public StringBuilder getCheckSumString(TreeMap<String,String> paramMap) throws Exception {
+
+		Set<String> keys = paramMap.keySet();
+		
+		StringBuilder checkSumStringBuffer = new StringBuilder("");
+		
+		TreeSet<String> parameterSet = new TreeSet<String>();
+		for(String key : keys){
+
+			if (!("CHECKSUMHASH".equalsIgnoreCase(key))){
+				parameterSet.add(key);
+			}
+
+		}
+		for(String paramName : parameterSet){
+			
+			String value = paramMap.get(paramName);
+			if(value == null || value.trim().equalsIgnoreCase("NULL")) {
+				value = "";
+			}
+			checkSumStringBuffer.append(value).append("|");
+			
+		}
+		return checkSumStringBuffer;
+	}
+	/**
+	 * 
+	 * @param masterKey
+	 * @param resposneMap
+	 * @param responseCheckSumString
+	 * @return boolean 
+	 * @throws Exception
+	 * This method will be used by merchant to verify response 
+	 */
+	public boolean verifycheckSum(String masterKey, TreeMap<String, String>  paramap,String responseCheckSumString) throws Exception {
+
+		boolean isValidChecksum = false;
+		StringBuilder response = checkSumServiceHelper.getCheckSumString(paramap);
+		Encryption encryption = EncryptionFactory.getEncryptionInstance("AES");
+	
+		String responseCheckSumHash = encryption.decrypt(responseCheckSumString, masterKey);
+		
+		String randomStr = getLastNChars(responseCheckSumHash, 4);
+		String payTmCheckSumHash = calculateRequestCheckSum(randomStr ,response.toString());
+		
+		if (null != responseCheckSumHash && null != payTmCheckSumHash) {
+			if (responseCheckSumHash.equals(payTmCheckSumHash)) {
+				isValidChecksum = true;
+			}
+		
+	}return isValidChecksum;
+	}
+	private String calculateRequestCheckSum(String randomStr, String checkSumString) throws Exception {
+
+		String reqCheckSumValue = checkSumString;
+
+		String checkSumHash = CryptoUtils.getSHA256(reqCheckSumValue.concat(randomStr));
+		checkSumHash = checkSumHash.concat(randomStr);
+		return checkSumHash;
+	}
+	public static String getLastNChars(String inputString,int subStringLength)
+	{
+		if(null != inputString && inputString.length() > 0)
+		{	
+		   int length = inputString.length();
+		    if(length <= subStringLength){
+		    	return inputString;	
+		    }
+		    int startIndex = length - subStringLength;
+		    return inputString.substring(startIndex);
+		}
+		else
+		{
+			return "";
+		}
+	}
+	public static void main(String[] a)
+	{
+		String key ="C#txuHrwuO0ghDfv";
+		String str = "Xnm75AWvCE2d+veezErqJhbiCJHlkXXxCsCGwuh4eyVT7db7GB323sgGADluR1bXvC3kMNUr1hi/8rED1wOSHE+Wz799km/D1y8uXctaB6Y=";
+		Encryption encryption = EncryptionFactory.getEncryptionInstance("AES");
+		
+		try {
+			System.out.println(encryption.decrypt(str, key));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+	}
+}
